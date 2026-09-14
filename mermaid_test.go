@@ -10,8 +10,10 @@ import (
 	"github.com/tetratelabs/wazero"
 )
 
-// diagrams is one small, valid source per supported diagram family. It doubles
-// as the corpus for the output gallery in output_test.go.
+// diagrams is one small, valid source per supported diagram family, kept
+// minimal so the breadth tests stay fast. The gallery and the conformance
+// checks use the documentation corpus in testdata/examples instead; see
+// examples_test.go.
 var diagrams = map[string]string{
 	"flowchart": "flowchart TD\n" +
 		"  A[Start] --> B{Is it working?}\n" +

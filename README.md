@@ -65,18 +65,82 @@ mermaid: unexpected token 'this is not a diagram' at 1:1; expected unknown or mi
 
 ## Diagram types
 
-The tests render all of these, and check each result is well-formed SVG:
+`testdata/examples/` holds the headline example from every Mermaid
+documentation page, copied verbatim, so that what this renderer does can be
+judged against what Mermaid advertises. `scripts/fetch-examples.sh` refreshes
+them; the table in `examples_test.go` records which ones the pinned renderer
+actually understands.
+
+Twenty-three of the thirty-one documented diagram types render:
 
 `flowchart` / `graph`, `sequenceDiagram`, `classDiagram`, `stateDiagram-v2`,
-`erDiagram`, `gantt`, `pie`, `journey`, `mindmap`, `timeline`, `gitGraph`,
-`quadrantChart`, `requirementDiagram`, `C4Context`, `zenuml`, and the beta
-types `sankey-beta`, `xychart-beta`, `block-beta`, `packet-beta`, `kanban`,
-`architecture-beta`, `radar-beta` and `treemap-beta`.
+`erDiagram`, `journey`, `gantt`, `pie`, `quadrantChart`, `requirementDiagram`,
+`gitGraph`, `C4Context`, `mindmap`, `timeline`, `zenuml`, `sankey`, `xychart`,
+`block`, `packet`, `kanban`, `architecture`, `radar`, `treemap` — plus the
+`-beta` spellings of the beta types.
+
+Eight do not. **Seven of them fail silently**, which is the trap to know about:
+the renderer's parser does not recognise the header, falls through to flowchart
+syntax, and returns a perfectly well-formed SVG of boxes labelled with
+fragments of your source. A `venn-beta` diagram comes back as boxes reading
+"venn", "beta" and "set".
+
+| Type | Header | What happens |
+|---|---|---|
+| Swimlanes Diagram | `swimlane-beta` | parsed as a flowchart |
+| Use Case Diagram | `usecase-beta` | parsed as a flowchart |
+| Venn | `venn-beta` | parsed as a flowchart |
+| Ishikawa | `ishikawa-beta` | parsed as a flowchart |
+| Wardley | `wardley-beta` | parsed as a flowchart |
+| Cynefin | `cynefin-beta` | parsed as a flowchart |
+| TreeView | `treeView-beta` | parsed as a flowchart |
+| Event Modeling | `eventmodeling` | rejected with an error |
+
+Mermaid 12 also documents `agentflow-beta` and `railroad-ebnf-beta`, which the
+renderer does not implement either; they are not in the corpus.
+
+Nothing in the API distinguishes a fallback from a real render, so if you accept
+diagram source from users, reject these headers yourself before calling
+`Render`.
+
+## Fidelity
 
 It is a reimplementation rather than a port, so output is *Mermaid-like* rather
 than byte-identical to upstream `mermaid.js`: layout is close, and some details
 differ. Entity-relationship cardinality markers and pie-slice labelling are the
 most visible divergences in the current release.
+
+**Sankey is broken.** Within a column the renderer only assigns a vertical
+position to nodes that have an incoming link, so every source node sits at y=0
+on top of the others. On the diagram from the Mermaid Sankey documentation
+page, twenty of the forty-eight nodes land on a single point and the result is
+unreadable. The renderer does have rank-packing code for this, but
+[gates it](https://github.com/1jehuang/mermaid-rs-renderer/blob/master/src/layout/sankey.rs)
+behind `has_cycle || weak_component_count > 1` to keep the geometry of
+"ordinary connected acyclic Sankey diagrams" unchanged — which is exactly the
+shape that suffers. This is still the case on the renderer's `master`, not only
+in the pinned release.
+
+**The `sankey` configuration section does nothing.** The renderer's
+`src/config.rs` does not mention Sankey at all. The canvas (560–640 × 360), the
+node width (10) and the gap are hard-coded, and `showValues`, `nodeAlignment`,
+`linkColor`, `nodeWidth`, `nodePadding`, `prefix` and `suffix` are
+unimplemented — link values are always drawn, whatever `showValues` says.
+
+**YAML front matter is skipped, not read.** A `---` block is stripped so the
+diagram still parses, but neither `title:` nor a `config:` mapping has any
+effect; only Gantt's `displayMode` is wired up. The documentation's headline
+examples for the class, ER, state, Git, packet, radar and Sankey diagrams all
+carry front matter, and none of it is honoured. Pass configuration through
+`Options` instead, which does work.
+
+**`%%{init: ...}%%` directives are ignored** in the pinned build. This was
+fixed upstream after 0.3.1 ("Apply `%%{init}%%` directives in library API entry
+points"), so a future release should bring it.
+
+Each of these is pinned by a test in `sankey_test.go` that asserts the *broken*
+behaviour, so that a `mermaid.wasm` upgrade which fixes one fails loudly rather
+than passing unnoticed.
 
 If you need pixel parity with upstream Mermaid, this is the wrong tool — use
 `@mermaid-js/mermaid-cli` and a headless browser. If you want diagrams from a
@@ -179,12 +243,36 @@ shape of that interface: it refuses to write if an expected export is missing
 or if the build has grown an import the package does not implement, so an
 incompatible release fails at fetch time rather than at the first render.
 
-Currently pinned to **mermaid-wasm-renderer 0.3.1**.
+Currently pinned to **mermaid-wasm-renderer 0.3.1**, which is the latest
+published release; the renderer's `master` has moved on but has not been cut.
+
+After an upgrade, re-check the support table in `examples_test.go` and the
+Fidelity section above — the tests that pin known defects are written to fail
+when the defect is fixed, and each says what to do about it.
+
+## Refreshing the documentation corpus
+
+`scripts/fetch-examples.sh` re-copies `testdata/examples/` from the Mermaid
+documentation, one headline example per diagram type:
+
+```sh
+scripts/fetch-examples.sh             # from mermaid-js/mermaid@develop
+scripts/fetch-examples.sh -r v12.0.0  # from a tag
+scripts/fetch-examples.sh -n          # report what would change, write nothing
+go test -run TestExample ./...
+```
+
+It needs only `curl` and `python3`. Which block of which documentation page
+becomes which file is a table inside the script, and needs revisiting when a
+page is reorganised — a page whose first example is a bare syntax fragment gets
+a later, representative block instead. The support classification is not
+fetched: it lives in `examples_test.go` and is this package's own finding.
 
 ## Looking at the output
 
-`TestWriteOutput` renders the test corpus in every theme into
-`testdata/output/`, alongside an `index.html` that shows them side by side:
+`TestWriteOutput` renders the documentation corpus in every theme into
+`testdata/output/`, alongside an `index.html` that shows them side by side,
+with the unsupported types called out:
 
 ```sh
 go test -run TestWriteOutput ./...
