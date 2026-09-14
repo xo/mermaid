@@ -1,7 +1,12 @@
-# The documentation corpus is copied verbatim from mermaid-js/mermaid and has
-# to stay byte-identical on every platform: given CRLF input the renderer
-# carries the stray carriage return into gitGraph labels, so a Windows checkout
-# would render differently from a Linux one.
+# Normalise committed text to LF in the repository and in the working tree, so
+# a Windows checkout is byte-identical to a Linux one.
+* text=auto eol=lf
+
+# This matters more than usual for the documentation corpus, which is copied
+# verbatim from mermaid-js/mermaid: given CRLF input the renderer carries the
+# stray carriage return into gitGraph labels, so a CRLF checkout would render
+# differently from an LF one.
 *.mmd text eol=lf
 
-mermaid.wasm binary
+# The bundled mermaid-rs-renderer build is not text.
+*.wasm binary -eol
