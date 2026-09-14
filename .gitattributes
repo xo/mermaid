@@ -1,0 +1,7 @@
+# The documentation corpus is copied verbatim from mermaid-js/mermaid and has
+# to stay byte-identical on every platform: given CRLF input the renderer
+# carries the stray carriage return into gitGraph labels, so a Windows checkout
+# would render differently from a Linux one.
+*.mmd text eol=lf
+
+mermaid.wasm binary
