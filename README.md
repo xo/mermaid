@@ -1,3 +1,12 @@
+<hr/>
+
+## DEPRECATED
+
+NOTE: This repo has been deprecated. A Pure Go Mermaid parser/renderer is now
+available in the [`zuzu`](https://github.com/xo/zuzu) package.
+
+<hr/>
+
 # mermaid
 
 Render [Mermaid](https://mermaid.js.org) diagrams to SVG from Go. Pure Go, no
@@ -41,14 +50,14 @@ for _, src := range sources {
 
 ## API
 
-| | |
-|---|---|
-| `New(ctx, opts...) (*Renderer, error)` | Compiles the module. Reuse it. |
-| `(*Renderer).Render(ctx, src) (string, error)` | Diagram source to an SVG document. |
-| `(*Renderer).RenderWith(ctx, src, Options) (string, error)` | The same, with a theme and configuration. |
-| `(*Renderer).RegisterFont(ctx, ttf) error` | Adds a font for text measurement. |
-| `(*Renderer).Version() string` | The bundled renderer release. |
-| `Render` / `RenderWith` | One-shot helpers that own the runtime for you. |
+|                                                             |                                                |
+| ----------------------------------------------------------- | ---------------------------------------------- |
+| `New(ctx, opts...) (*Renderer, error)`                      | Compiles the module. Reuse it.                 |
+| `(*Renderer).Render(ctx, src) (string, error)`              | Diagram source to an SVG document.             |
+| `(*Renderer).RenderWith(ctx, src, Options) (string, error)` | The same, with a theme and configuration.      |
+| `(*Renderer).RegisterFont(ctx, ttf) error`                  | Adds a font for text measurement.              |
+| `(*Renderer).Version() string`                              | The bundled renderer release.                  |
+| `Render` / `RenderWith`                                     | One-shot helpers that own the runtime for you. |
 
 `Options.Theme` picks one of `default`, `dark`, `forest`, `neutral` or
 `modern`. `Options.Config` takes a Mermaid configuration document as JSON — the
@@ -85,16 +94,16 @@ syntax, and returns a perfectly well-formed SVG of boxes labelled with
 fragments of your source. A `venn-beta` diagram comes back as boxes reading
 "venn", "beta" and "set".
 
-| Type | Header | What happens |
-|---|---|---|
-| Swimlanes Diagram | `swimlane-beta` | parsed as a flowchart |
-| Use Case Diagram | `usecase-beta` | parsed as a flowchart |
-| Venn | `venn-beta` | parsed as a flowchart |
-| Ishikawa | `ishikawa-beta` | parsed as a flowchart |
-| Wardley | `wardley-beta` | parsed as a flowchart |
-| Cynefin | `cynefin-beta` | parsed as a flowchart |
-| TreeView | `treeView-beta` | parsed as a flowchart |
-| Event Modeling | `eventmodeling` | rejected with an error |
+| Type              | Header          | What happens           |
+| ----------------- | --------------- | ---------------------- |
+| Swimlanes Diagram | `swimlane-beta` | parsed as a flowchart  |
+| Use Case Diagram  | `usecase-beta`  | parsed as a flowchart  |
+| Venn              | `venn-beta`     | parsed as a flowchart  |
+| Ishikawa          | `ishikawa-beta` | parsed as a flowchart  |
+| Wardley           | `wardley-beta`  | parsed as a flowchart  |
+| Cynefin           | `cynefin-beta`  | parsed as a flowchart  |
+| TreeView          | `treeView-beta` | parsed as a flowchart  |
+| Event Modeling    | `eventmodeling` | rejected with an error |
 
 Mermaid 12 also documents `agentflow-beta` and `railroad-ebnf-beta`, which the
 renderer does not implement either; they are not in the corpus.
@@ -105,7 +114,7 @@ diagram source from users, reject these headers yourself before calling
 
 ## Fidelity
 
-It is a reimplementation rather than a port, so output is *Mermaid-like* rather
+It is a reimplementation rather than a port, so output is _Mermaid-like_ rather
 than byte-identical to upstream `mermaid.js`: layout is close, and some details
 differ. Entity-relationship cardinality markers and pie-slice labelling are the
 most visible divergences in the current release.
@@ -138,7 +147,7 @@ carry front matter, and none of it is honoured. Pass configuration through
 fixed upstream after 0.3.1 ("Apply `%%{init}%%` directives in library API entry
 points"), so a future release should bring it.
 
-Each of these is pinned by a test in `sankey_test.go` that asserts the *broken*
+Each of these is pinned by a test in `sankey_test.go` that asserts the _broken_
 behaviour, so that a `mermaid.wasm` upgrade which fixes one fails loudly rather
 than passing unnoticed.
 
@@ -150,11 +159,11 @@ Go binary with no external runtime, this is the trade.
 
 On an Apple M1:
 
-| | |
-|---|---|
-| `New` (cold) | ~1.3 s — compiling the 2.9 MB module |
-| `New` (shared `CompilationCache`) | ~23 ms |
-| `Render`, small flowchart | ~50 ms |
+|                                   |                                      |
+| --------------------------------- | ------------------------------------ |
+| `New` (cold)                      | ~1.3 s — compiling the 2.9 MB module |
+| `New` (shared `CompilationCache`) | ~23 ms                               |
+| `Render`, small flowchart         | ~50 ms                               |
 
 The compile dominates, so `New` is the thing to avoid repeating.
 `WithCompilationCache` shares compiled machine code between `Renderer`s:
